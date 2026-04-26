@@ -5,22 +5,54 @@
       "use": "vercel-php@0.7.2"
     },
     {
-      "src": "api/*.php",
+      "src": "api/data-bps.php",
       "use": "vercel-php@0.7.2"
     },
     {
-      "src": "api/admin/*.php",
+      "src": "api/admin/Dashboard.php",
+      "use": "vercel-php@0.7.2"
+    },
+    {
+      "src": "api/ProsesLogin.php",
+      "use": "vercel-php@0.7.2"
+    },
+    {
+      "src": "api/ProsesLogout.php",
+      "use": "vercel-php@0.7.2"
+    },
+    {
+      "src": "api/ProsesRegistrasti.php",
+      "use": "vercel-php@0.7.2"
+    },
+    {
+      "src": "api/ProsesBooking.php",
       "use": "vercel-php@0.7.2"
     }
   ],
   "routes": [
     {
-      "src": "/api/admin/(.*\\.php)",
-      "dest": "/api/admin/$1"
+      "src": "/api/data-bps.php",
+      "dest": "/api/data-bps.php"
     },
     {
-      "src": "/api/(.*\\.php)",
-      "dest": "/api/$1"
+      "src": "/api/admin/Dashboard.php",
+      "dest": "/api/admin/Dashboard.php"
+    },
+    {
+      "src": "/api/ProsesLogin.php",
+      "dest": "/api/ProsesLogin.php"
+    },
+    {
+      "src": "/api/ProsesLogout.php",
+      "dest": "/api/ProsesLogout.php"
+    },
+    {
+      "src": "/api/ProsesRegistrasti.php",
+      "dest": "/api/ProsesRegistrasti.php"
+    },
+    {
+      "src": "/api/ProsesBooking.php",
+      "dest": "/api/ProsesBooking.php"
     },
     {
       "src": "/(.*\\.css)",
