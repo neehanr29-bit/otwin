@@ -5,7 +5,7 @@
       "use": "vercel-php@0.7.2"
     },
     {
-      "src": "api/data-bps.php",
+      "src": "api/databps.php",
       "use": "vercel-php@0.7.2"
     },
     {
