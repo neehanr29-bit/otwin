@@ -15,7 +15,7 @@ define('BPS_VAR_WISNUS_TUJUAN', '2201');  // Perjalanan Wisnus per Provinsi Tuju
 define('BPS_VAR_WISNUS_ASAL',   '1189');  // Perjalanan Wisnus per Provinsi Asal
 define('BPS_VAR_WISNUS_TOTAL',  '2195');  // Jumlah Perjalanan Wisatawan Nasional
 
-define('CACHE_DIR', __DIR__ . '/');
+define('CACHE_DIR', '/tmp/');
 define('CACHE_TTL',  86400); // 1 hari
 
 // ── Fetch pakai cURL (lebih handal dari file_get_contents) ──
