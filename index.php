@@ -383,7 +383,7 @@ function fmtJumlah(n) {
 // ── Ambil data total BPS ──
 async function muatDataBPS() {
   try {
-    const res  = await fetch('/api/data-bps.php?type=total');
+    const res  = await fetch('/api/databps.php?type=total');
     const json = await res.json();
  
     if (json.status !== 'ok' || !json.data.length) {
@@ -446,7 +446,7 @@ async function muatDataBPS() {
 // ── Ambil data provinsi BPS ──
 async function muatProvinsi() {
   try {
-    const res  = await fetch('/api/data-bps.php?type=provinsi');
+    const res  = await fetch('/api/databps.php?type=provinsi');
     const json = await res.json();
     if (json.status !== 'ok' || !json.data.length) return;
  
