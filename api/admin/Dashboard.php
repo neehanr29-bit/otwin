@@ -1,25 +1,25 @@
 <?php
-
+ 
 if (!isset($_COOKIE['otwin_role']) || $_COOKIE['otwin_role'] !== 'admin') {
     header("Location: /");
     exit();
 }
-
+ 
 include __DIR__ . '/../Koneksi.php';
-
+ 
 $pesan = '';  
 $tipe  = '';
-
+ 
 // ════════════════════════════════════════════
 //  HANDLE POST ACTIONS
 // ════════════════════════════════════════════
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-
+ 
     $aksi = $_POST['action'];
-
+ 
     // ── CRUD AKUN (Multi-Tabel: Admin & User) ──
     if (in_array($aksi, ['create_akun', 'update_akun', 'delete_akun'])) {
-
+ 
         if ($aksi === 'create_akun') {
             $nama          = trim($_POST['nama']);
             $tanggal_lahir = $_POST['tanggal_lahir'] ?? null;
@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $username      = trim($_POST['username']);
             $password      = $_POST['password'];
             $target_role   = $_POST['role']; // 'admin' atau 'user'
-
+ 
             if ($nama && $email && $username && $password) {
                 $hash = password_hash($password, PASSWORD_DEFAULT);
                 if ($target_role === 'admin') {
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $stmt = mysqli_prepare($koneksi, "INSERT INTO users (nama, tanggal_lahir, email, username, password) VALUES (?,?,?,?,?)");
                     mysqli_stmt_bind_param($stmt, "sssss", $nama, $tanggal_lahir, $email, $username, $hash);
                 }
-
+ 
                 if (mysqli_stmt_execute($stmt)) {
                     $pesan = "✅ Akun <strong>$username</strong> berhasil ditambahkan!"; $tipe = 'sukses';
                 } else {
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $pesan = "⚠️ Semua field wajib diisi!"; $tipe = 'warning';
             }
         }
-
+ 
         if ($aksi === 'update_akun') {
             $id          = (int) $_POST['id'];
             $nama        = trim($_POST['nama']);
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $username    = trim($_POST['username']);
             $target_role = $_POST['role'];
             $pw_baru     = trim($_POST['password_baru']);
-
+ 
             if ($target_role === 'admin') {
                 if ($pw_baru !== '') {
                     $hash = password_hash($pw_baru, PASSWORD_DEFAULT);
@@ -79,11 +79,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             if (mysqli_stmt_execute($stmt)) { $pesan = "✅ Data <strong>$username</strong> berhasil diperbarui!"; $tipe = 'sukses'; }
             else { $pesan = "❌ Gagal: " . mysqli_error($koneksi); $tipe = 'error'; }
         }
-
+ 
         if ($aksi === 'delete_akun') {
             $id          = (int) $_POST['id'];
             $target_role = $_POST['role'];
-
+ 
             if ($target_role === 'admin') {
                 $cek = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT username, is_master FROM admin WHERE id=$id"));
                 if ($cek['is_master'] == 1) {
@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
         }
     }
-
+ 
     // ── CRUD DESTINASI ──
     if (in_array($aksi, ['create_dest', 'update_dest', 'delete_dest'])) {
         if ($aksi === 'create_dest') {
@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $pesan = "🗑️ Destinasi berhasil dihapus."; $tipe = 'sukses';
         }
     }
-
+ 
     // ── KELOLA BOOKING ──
     if ($aksi === 'update_status') {
         $stmt = mysqli_prepare($koneksi, "UPDATE booking SET status=? WHERE id=?");
@@ -130,18 +130,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $pesan = "🗑️ Booking berhasil dihapus."; $tipe = 'sukses';
     }
 }
-
+ 
 // ── READ DATA ──
 $semua_user    = mysqli_query($koneksi, "SELECT * FROM users ORDER BY id ASC");
 $semua_admin   = mysqli_query($koneksi, "SELECT * FROM admin ORDER BY id ASC");
 $semua_dest    = mysqli_query($koneksi, "SELECT * FROM destinasi ORDER BY id ASC");
 $semua_booking = mysqli_query($koneksi, "SELECT * FROM booking ORDER BY id DESC");
-
+ 
 $total_user    = mysqli_num_rows($semua_user);
 $total_admin   = mysqli_num_rows($semua_admin);
 $total_dest    = mysqli_num_rows($semua_dest);
 $total_booking = mysqli_num_rows($semua_booking);
-
+ 
 $tab = $_GET['tab'] ?? 'user';
 ?>
 <!DOCTYPE html>
@@ -154,44 +154,44 @@ $tab = $_GET['tab'] ?? 'user';
   <link rel="stylesheet" href="dashboard.css"/>
 </head>
 <body>
-
+ 
 <nav class="navbar">
   <div class="navbar-brand">
     <div class="navbar-logo">OT<span>Win</span></div>
     <span class="badge-admin">Admin Panel</span>
   </div>
   <div class="navbar-right">
-    <span class="navbar-greeting">Halo, <strong><?= htmlspecialchars($_COOKIE['username']) ?></strong> 👋</span>
+    <span class="navbar-greeting">Halo, <strong><?= htmlspecialchars($_COOKIE['otwin_username']) ?></strong> 👋</span>
     <a href="../../index.php" class="btn-outline-teal">🏠 Ke Beranda</a>
     <a href="../ProsesLogout.php" class="btn-danger">Logout</a>
   </div>
 </nav>
-
+ 
 <div class="main">
-
+ 
   <div class="page-header">
     <h1>Dashboard <em>Admin</em></h1>
     <p>Kelola data User, Admin, Destinasi, dan Booking.</p>
   </div>
-
+ 
   <?php if ($pesan): ?>
     <div class="alert alert-<?= $tipe ?>"><?= $pesan ?></div>
   <?php endif; ?>
-
+ 
   <div class="stats">
     <div class="stat-card teal">  <div class="label">Total User</div>      <div class="value"><?= $total_user ?></div>    </div>
     <div class="stat-card gold">  <div class="label">Total Admin</div>     <div class="value"><?= $total_admin ?></div>   </div>
     <div class="stat-card blue">  <div class="label">Total Destinasi</div> <div class="value"><?= $total_dest ?></div>    </div>
     <div class="stat-card green"> <div class="label">Total Booking</div>   <div class="value"><?= $total_booking ?></div> </div>
   </div>
-
+ 
   <div class="tabs">
     <a href="?tab=user"    class="tab <?= $tab==='user'    ? 'active-teal'  : '' ?>">👥 Kelola User</a>
     <a href="?tab=admin"   class="tab <?= $tab==='admin'   ? 'active-gold'  : '' ?>">⚙️ Kelola Admin</a>
     <a href="?tab=dest"    class="tab <?= $tab==='dest'    ? 'active-blue'  : '' ?>">🏝️ Kelola Destinasi</a>
     <a href="?tab=booking" class="tab <?= $tab==='booking' ? 'active-green' : '' ?>">🎟️ Kelola Booking</a>
   </div>
-
+ 
 <?php
 // ════════════════════════════════
 //  TAB: USER & ADMIN
@@ -249,7 +249,7 @@ if ($tab === 'user' || $tab === 'admin'):
       </tbody>
     </table>
   </div>
-
+ 
 <?php
 // ════════════════════════════════
 //  TAB: DESTINASI
@@ -294,7 +294,7 @@ elseif ($tab === 'dest'):
       </tbody>
     </table>
   </div>
-
+ 
 <?php
 // ════════════════════════════════
 //  TAB: BOOKING
@@ -349,7 +349,7 @@ elseif ($tab === 'booking'):
       </tbody>
     </table>
   </div>
-
+ 
 <?php endif; ?>
 </div><div class="modal-overlay" id="modalAkun">
   <div class="modal-box">
@@ -371,7 +371,7 @@ elseif ($tab === 'booking'):
     </form>
   </div>
 </div>
-
+ 
 <div class="modal-overlay" id="modalEditAkun">
   <div class="modal-box">
     <button class="modal-close" onclick="tutupModal('modalEditAkun')">✕</button>
@@ -393,7 +393,7 @@ elseif ($tab === 'booking'):
     </form>
   </div>
 </div>
-
+ 
 <div class="modal-overlay" id="modalDest">
   <div class="modal-box">
     <button class="modal-close" onclick="tutupModal('modalDest')">✕</button>
@@ -415,7 +415,7 @@ elseif ($tab === 'booking'):
     </form>
   </div>
 </div>
-
+ 
 <div class="modal-overlay" id="modalEditDest">
   <div class="modal-box">
     <button class="modal-close" onclick="tutupModal('modalEditDest')">✕</button>
@@ -438,8 +438,8 @@ elseif ($tab === 'booking'):
     </form>
   </div>
 </div>
-
-
+ 
+ 
 <script>
 function tutupModal(id) {
   document.getElementById(id).classList.remove('active');
@@ -449,7 +449,7 @@ function bukaModal(id) {
   document.getElementById(id).classList.add('active');
   document.body.style.overflow = 'hidden';
 }
-
+ 
 function bukaModalAkun(role) {
   const isAdmin = role === 'admin';
   document.getElementById('akunEmoji').textContent = isAdmin ? '⚙️' : '👤';
@@ -460,7 +460,7 @@ function bukaModalAkun(role) {
   document.getElementById('groupTgl').style.display = isAdmin ? 'none' : 'flex';
   bukaModal('modalAkun');
 }
-
+ 
 function bukaModalEditAkun(data, role) {
   const isAdmin = role === 'admin';
   document.getElementById('eAkunId').value       = data.id;
@@ -473,7 +473,7 @@ function bukaModalEditAkun(data, role) {
   document.getElementById('eAkunBtn').className  = 'btn-submit ' + (isAdmin ? 'gold' : 'teal');
   bukaModal('modalEditAkun');
 }
-
+ 
 function bukaModalDest() { bukaModal('modalDest'); }
 function bukaModalEditDest(data) {
   document.getElementById('eDestId').value    = data.id;
@@ -485,7 +485,7 @@ function bukaModalEditDest(data) {
   bukaModal('modalEditDest');
 }
 function bukaModalDest() { bukaModal('modalDest'); }
-
+ 
 function bukaModalEditDest(data) {
   document.getElementById('eDestId').value    = data.id;
   document.getElementById('eDestNama').value  = data.nama;
@@ -495,7 +495,7 @@ function bukaModalEditDest(data) {
   document.getElementById('eDestDesk').value  = data.deskripsi || '';
   bukaModal('modalEditDest');
 }
-
+ 
 </script>
 </body>
 </html>
