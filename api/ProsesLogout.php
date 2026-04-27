@@ -1,9 +1,11 @@
 <?php
-    session_start();
-    // Menghapus semua data sesi
-    session_destroy();
-    
-    // Arahkan kembali ke halaman utama
-    header("Location: ../index.php");
-    exit();
+// Hapus semua cookie OTWin
+$expire = time() - 3600;
+setcookie('otwin_username',  '', $expire, '/', '', true, true);
+setcookie('otwin_nama',      '', $expire, '/', '', true, true);
+setcookie('otwin_role',      '', $expire, '/', '', true, true);
+setcookie('otwin_is_master', '', $expire, '/', '', true, true);
+ 
+header("Location: /");
+exit();
 ?>

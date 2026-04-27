@@ -1,4 +1,4 @@
-<?php session_start(); ?>
+<?php
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -34,9 +34,9 @@
 <nav id="navbar" class="fixed top-0 w-full flex items-center justify-between px-[6%] py-5 z-50 bg-cream/90 backdrop-blur-md border-b border-gold/15 transition-all duration-300">
   <div class="font-playfair text-3xl font-black text-teal tracking-tight">OT<span class="text-gold">Win</span></div>
   <div class="flex items-center gap-3" id="navActions">
-    <?php if(isset($_SESSION['username'])): ?>
-        <span class="font-dm text-teal font-bold mr-2">Halo, <?= htmlspecialchars($_SESSION['username']); ?>!</span>
-        <?php if(isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+    <?php if(isset($_COOKIE['otwin_username'])): ?>
+        <span class="font-dm text-teal font-bold mr-2">Halo, <?= htmlspecialchars($_COOKIE['otwin_username']); ?>!</span>
+        <?php if(isset($_COOKIE['otwin_role']) && $_COOKIE['otwin_role'] === 'admin'): ?>
             <a href="api/admin/Dashboard.php" class="px-5 py-2 rounded-full bg-gold text-white text-sm font-semibold hover:bg-gold-light transition-all duration-300 shadow-sm">⚙️ Dashboard Admin</a>
         <?php endif; ?>
         <a href="api/ProsesLogout.php" class="px-5 py-2 rounded-full border-[1.5px] border-red-500 text-red-500 text-sm font-medium hover:bg-red-500 hover:text-white transition-all duration-300">Logout</a>
@@ -486,7 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
  
 <!-- ── Kirim status login dari PHP ke JavaScript ── -->
 <script>
-  const IS_LOGGED_IN = <?= isset($_SESSION['username']) ? 'true' : 'false' ?> || false;
+  const IS_LOGGED_IN = <?= isset($_COOKIE['otwin_username']) ? 'true' : 'false' ?> || false;
 </script>
 <script src="script.js"></script>
 </body>
