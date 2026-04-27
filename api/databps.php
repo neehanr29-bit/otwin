@@ -4,9 +4,19 @@ header('Access-Control-Allow-Origin: *');
  
 define('BPS_KEY',    '8a298f03b114b6f2d212a5f3dac5b57e');
 define('BPS_BASE',   'https://webapi.bps.go.id/v1/api/list');
-define('BPS_DOMAIN', '5100'); // Bali
-define('VAR_WISNUS_ASAL',   '412'); // Wisnus per Kab/Kota Asal
-define('VAR_WISNUS_TUJUAN', '413'); // Wisnus per Kab/Kota Tujuan
+define('BPS_DOMAIN', '5100');
+define('VAR_WISNUS', '412'); // Wisnus per Kab/Kota Asal
+define('VAR_TUJUAN', '413'); // Wisnus per Kab/Kota Tujuan
+ 
+// th_id dari API BPS domain 5100
+$TH_MAP = [
+    '119' => '2019',
+    '120' => '2020',
+    '121' => '2021',
+    '122' => '2022',
+    '123' => '2023',
+    '124' => '2024',
+];
  
 function fetch_bps($params) {
     $url = BPS_BASE . '?' . http_build_query(array_merge(['key' => BPS_KEY], $params));
@@ -20,121 +30,109 @@ function fetch_bps($params) {
     return $r ? json_decode($r, true) : null;
 }
  
-function ambil_var($var_id) {
-    return fetch_bps(['model'=>'data','domain'=>BPS_DOMAIN,'var'=>$var_id]);
-}
- 
-function parse_var($json) {
-    if (!$json || ($json['data-availability']??'') !== 'available') return [];
- 
-    $dc  = $json['datacontent'] ?? [];
-    $thn = $dc['tahun']        ?? ($json['tahun']       ?? []);
-    $tv  = $dc['turvar']       ?? ($json['turvar']      ?? []);
-    $raw = $dc['datacontent']  ?? ($json['datacontent'] ?? []);
- 
-    if (empty($thn) || empty($raw)) return [];
- 
-    $hasil = [];
-    foreach ($thn as $kt => $nt) {
-        $row = $raw[$kt] ?? [];
-        $tot = 0;
-        if (is_array($row)) {
-            foreach ($row as $v) {
-                $tot += (float) str_replace([',','.',' '], ['','',''], $v);
-            }
-        } else {
-            $tot = (float) str_replace([',','.',' '], ['','',''], $row);
-        }
-        if ($tot > 0) $hasil[] = ['tahun' => (string)$nt, 'jumlah' => (int)$tot];
-    }
-    return $hasil;
-}
- 
-function parse_per_wilayah($json) {
-    if (!$json || ($json['data-availability']??'') !== 'available') return [];
- 
-    $dc  = $json['datacontent'] ?? [];
-    $thn = $dc['tahun']       ?? ($json['tahun']  ?? []);
-    $tv  = $dc['turvar']      ?? ($json['turvar'] ?? []);
-    $raw = $dc['datacontent'] ?? ($json['datacontent'] ?? []);
- 
-    if (empty($thn) || empty($raw) || empty($tv)) return [];
- 
-    // Ambil tahun terbaru
-    end($thn); $kt = key($thn); $nt = $thn[$kt];
-    $row = $raw[$kt] ?? [];
- 
-    $data = [];
-    foreach ($tv as $kw => $nw) {
-        $v = (float) str_replace([',','.',' '], ['','',''], $row[$kw] ?? 0);
-        if ($v > 0 && strlen(trim($nw)) > 1) $data[trim($nw)] = (int)$v;
-    }
-    arsort($data);
-    return ['tahun' => $nt, 'data' => array_slice($data, 0, 5, true)];
+function ambil_per_tahun($var_id, $th_id) {
+    return fetch_bps([
+        'model'  => 'data',
+        'domain' => BPS_DOMAIN,
+        'var'    => $var_id,
+        'th'     => $th_id,
+    ]);
 }
  
 $type = $_GET['type'] ?? 'total';
  
 if ($type === 'total') {
-    $json  = ambil_var(VAR_WISNUS_ASAL);
-    $rows  = parse_var($json);
+    global $TH_MAP;
+    $hasil = [];
  
-    if (empty($rows)) {
-        echo json_encode(['status'=>'error','message'=>'Gagal parse data BPS.','raw'=>$json,'data'=>[]]);
+    foreach ($TH_MAP as $th_id => $tahun) {
+        $json = ambil_per_tahun(VAR_WISNUS, $th_id);
+        if (!$json || ($json['data-availability'] ?? '') !== 'available') continue;
+ 
+        $dc  = $json['datacontent'] ?? [];
+        $raw = $dc['datacontent'] ?? ($json['datacontent'] ?? []);
+ 
+        $total = 0;
+        if (is_array($raw)) {
+            array_walk_recursive($raw, function($v) use (&$total) {
+                $angka = (float) str_replace([',', ' '], ['', ''], $v);
+                $total += $angka;
+            });
+        }
+ 
+        if ($total > 0) {
+            $hasil[] = ['tahun' => $tahun, 'jumlah' => (int)$total];
+        }
+    }
+ 
+    if (empty($hasil)) {
+        echo json_encode(['status'=>'error','message'=>'Tidak ada data yang berhasil diambil dari BPS.','data'=>[]]);
         exit;
     }
- 
-    // Agregasi per tahun
-    $agg = [];
-    foreach ($rows as $r) {
-        preg_match('/\d{4}/', $r['tahun'], $m);
-        $thn = $m[0] ?? $r['tahun'];
-        $agg[$thn] = ($agg[$thn] ?? 0) + $r['jumlah'];
-    }
-    ksort($agg);
-    $final = [];
-    foreach ($agg as $t => $j) $final[] = ['tahun' => $t, 'jumlah' => $j];
  
     echo json_encode([
         'status'    => 'ok',
         'sumber'    => 'API BPS RI — webapi.bps.go.id',
         'domain'    => '5100 (Provinsi Bali)',
-        'var_id'    => VAR_WISNUS_ASAL,
+        'var_id'    => VAR_WISNUS,
         'indikator' => 'Jumlah Perjalanan Wisatawan Nusantara di Bali',
-        'data'      => $final
+        'data'      => $hasil
     ]);
  
 } elseif ($type === 'provinsi') {
-    $json   = ambil_var(VAR_WISNUS_TUJUAN);
-    $result = parse_per_wilayah($json);
+    global $TH_MAP;
  
-    if (empty($result)) {
-        echo json_encode(['status'=>'error','message'=>'Gagal ambil data wilayah.','data'=>[]]);
+    // Ambil tahun terbaru yang tersedia
+    $th_ids   = array_keys($TH_MAP);
+    $tahun_nm = '';
+    $json     = null;
+ 
+    foreach (array_reverse($th_ids) as $th_id) {
+        $json = ambil_per_tahun(VAR_TUJUAN, $th_id);
+        if ($json && ($json['data-availability'] ?? '') === 'available') {
+            $tahun_nm = $TH_MAP[$th_id];
+            break;
+        }
+    }
+ 
+    if (!$json || ($json['data-availability'] ?? '') !== 'available') {
+        echo json_encode(['status'=>'error','message'=>'Gagal ambil data provinsi.','data'=>[]]);
         exit;
     }
  
+    $dc  = $json['datacontent'] ?? [];
+    $tv  = $dc['turvar']       ?? ($json['turvar']      ?? []);
+    $raw = $dc['datacontent']  ?? ($json['datacontent'] ?? []);
+ 
+    // Ambil baris pertama dari raw
+    $row = is_array($raw) ? reset($raw) : [];
+    $dd  = [];
+ 
+    foreach ($tv as $kw => $nw) {
+        $v = (float) str_replace([',', ' '], ['', ''], $row[$kw] ?? 0);
+        if ($v > 0 && strlen(trim($nw)) > 1) $dd[trim($nw)] = (int)$v;
+    }
+ 
+    arsort($dd);
+    $top5  = array_slice($dd, 0, 5, true);
     $final = [];
-    foreach ($result['data'] as $n => $j) $final[] = ['provinsi' => $n, 'jumlah' => $j];
+    foreach ($top5 as $n => $j) $final[] = ['provinsi' => $n, 'jumlah' => $j];
  
     echo json_encode([
         'status'    => 'ok',
         'sumber'    => 'API BPS RI — webapi.bps.go.id',
-        'tahun'     => $result['tahun'],
+        'tahun'     => $tahun_nm,
         'indikator' => 'Wisatawan Nusantara per Kab/Kota Tujuan di Bali',
         'data'      => $final
     ]);
  
 } elseif ($type === 'debug') {
-    echo json_encode([
-        'status'  => 'debug',
-        'domain'  => BPS_DOMAIN,
-        'results' => [
-            'var_412_asal'   => ambil_var('412'),
-            'var_413_tujuan' => ambil_var('413'),
-        ]
-    ], JSON_PRETTY_PRINT);
+    global $TH_MAP;
+    $test = ambil_per_tahun(VAR_WISNUS, '123'); // 2023
+    echo json_encode(['status'=>'debug','th_map'=>$TH_MAP,'sample_2023'=>$test], JSON_PRETTY_PRINT);
  
 } else {
     echo json_encode(['status'=>'error','message'=>'Gunakan ?type=total, ?type=provinsi, atau ?type=debug']);
 }
 ?>
+ 
