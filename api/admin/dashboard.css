@@ -1,5 +1,5 @@
 :root {
-  --teal:   #6aff00;
+  --teal:   #186c05;
   --teal-l: #2a9090;
   --gold:   #c8922a;
   --gold-l: #e8b84b;
@@ -67,7 +67,7 @@ body {
 .btn-danger {
   font-size: .75rem;
   padding: 8px 18px;
-  border-radius: 555px;
+  border-radius: 999px;
   border: none;
   background: var(--red);
   color: var(--white);
