@@ -100,7 +100,8 @@ if ($type === 'total') {
         exit;
     }
 
-    // Struktur BPS vervar = nama kab/kota, datacontent = nilai
+    // Struktur datacontent BPS: key = vervar_val + th_id + turvar + periode (flat)
+    // Kita jumlahkan semua nilai yang key-nya diawali dengan kode vervar (kab/kota)
     $vervar = $json['vervar'] ?? [];
     $raw    = $json['datacontent'] ?? [];
     $dd     = [];
@@ -108,19 +109,16 @@ if ($type === 'total') {
     foreach ($vervar as $item) {
         $kode = (string)($item['val'] ?? '');
         $nama = trim($item['label'] ?? '');
-        if (!$nama || $nama === 'Tidak ada') continue;
+        if (!$nama || $nama === 'Tidak ada' || !$kode) continue;
 
-        // Cari nilai di datacontent[turvar_key][kode]
-        $nilai = 0;
-        if (is_array($raw)) {
-            foreach ($raw as $turvar_key => $row) {
-                if (is_array($row) && isset($row[$kode])) {
-                    $nilai = (float) str_replace([',', ' '], ['', ''], $row[$kode]);
-                    break;
-                }
+        // Jumlahkan semua entry yang key-nya diawali dengan kode vervar
+        $total = 0;
+        foreach ($raw as $key => $val) {
+            if (strpos((string)$key, $kode) === 0) {
+                $total += (float) str_replace([',', ' '], ['', ''], $val);
             }
         }
-        if ($nilai > 0) $dd[$nama] = (int)$nilai;
+        if ($total > 0) $dd[$nama] = (int)$total;
     }
 
     arsort($dd);
