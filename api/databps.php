@@ -100,17 +100,27 @@ if ($type === 'total') {
         exit;
     }
 
-    $dc  = $json['datacontent'] ?? [];
-    $tv  = $dc['turvar']       ?? ($json['turvar']      ?? []);
-    $raw = $dc['datacontent']  ?? ($json['datacontent'] ?? []);
+    // Struktur BPS vervar = nama kab/kota, datacontent = nilai
+    $vervar = $json['vervar'] ?? [];
+    $raw    = $json['datacontent'] ?? [];
+    $dd     = [];
 
-    // Ambil baris pertama dari raw
-    $row = is_array($raw) ? reset($raw) : [];
-    $dd  = [];
+    foreach ($vervar as $item) {
+        $kode = (string)($item['val'] ?? '');
+        $nama = trim($item['label'] ?? '');
+        if (!$nama || $nama === 'Tidak ada') continue;
 
-    foreach ($tv as $kw => $nw) {
-        $v = (float) str_replace([',', ' '], ['', ''], $row[$kw] ?? 0);
-        if ($v > 0 && strlen(trim($nw)) > 1) $dd[trim($nw)] = (int)$v;
+        // Cari nilai di datacontent[turvar_key][kode]
+        $nilai = 0;
+        if (is_array($raw)) {
+            foreach ($raw as $turvar_key => $row) {
+                if (is_array($row) && isset($row[$kode])) {
+                    $nilai = (float) str_replace([',', ' '], ['', ''], $row[$kode]);
+                    break;
+                }
+            }
+        }
+        if ($nilai > 0) $dd[$nama] = (int)$nilai;
     }
 
     arsort($dd);
