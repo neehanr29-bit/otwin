@@ -1,8 +1,7 @@
 <?php
-session_start();
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header("Location: ../../index.php");
+if (!isset($_COOKIE['otwin_role']) || $_COOKIE['otwin_role'] !== 'admin') {
+    header("Location: /");
     exit();
 }
 
@@ -88,8 +87,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             if ($target_role === 'admin') {
                 $cek = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT username, is_master FROM admin WHERE id=$id"));
                 if ($cek['is_master'] == 1) {
-                    $pesan = "⛔ Gila lo? Ini Admin Master, nggak bisa dihapus!"; $tipe = 'error';
-                } elseif ($cek['username'] === $_SESSION['username']) {
+                    $pesan = "Lau sape mpruy mau hapus raja admin"; $tipe = 'error';
+                } elseif ($cek['username'] === $_COOKIE['otwin_username']) {
                     $pesan = "⚠️ Kamu tidak bisa menghapus akun sendiri!"; $tipe = 'warning';
                 } else {
                     mysqli_query($koneksi, "DELETE FROM admin WHERE id=$id");
@@ -162,7 +161,7 @@ $tab = $_GET['tab'] ?? 'user';
     <span class="badge-admin">Admin Panel</span>
   </div>
   <div class="navbar-right">
-    <span class="navbar-greeting">Halo, <strong><?= htmlspecialchars($_SESSION['username']) ?></strong> 👋</span>
+    <span class="navbar-greeting">Halo, <strong><?= htmlspecialchars($_COOKIE['username']) ?></strong> 👋</span>
     <a href="../../index.php" class="btn-outline-teal">🏠 Ke Beranda</a>
     <a href="../ProsesLogout.php" class="btn-danger">Logout</a>
   </div>
