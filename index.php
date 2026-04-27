@@ -37,7 +37,7 @@
     <?php if(isset($_COOKIE['otwin_username'])): ?>
         <span class="font-dm text-teal font-bold mr-2">Halo, <?= htmlspecialchars($_COOKIE['otwin_username']); ?>!</span>
         <?php if(isset($_COOKIE['otwin_role']) && $_COOKIE['otwin_role'] === 'admin'): ?>
-            <a href="api/admin/Dashboard.php" class="px-5 py-2 rounded-full bg-gold text-white text-sm font-semibold hover:bg-gold-light transition-all duration-300 shadow-sm">⚙️ Dashboard Admin</a>
+            <a href="/api/admin/Dashboard.php" class="px-5 py-2 rounded-full bg-gold text-white text-sm font-semibold hover:bg-gold-light transition-all duration-300 shadow-sm">⚙️ Dashboard Admin</a>
         <?php endif; ?>
         <a href="api/ProsesLogout.php" class="px-5 py-2 rounded-full border-[1.5px] border-red-500 text-red-500 text-sm font-medium hover:bg-red-500 hover:text-white transition-all duration-300">Logout</a>
     <?php else: ?>
