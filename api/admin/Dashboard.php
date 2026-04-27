@@ -5,7 +5,7 @@ if (!isset($_COOKIE['otwin_role']) || $_COOKIE['otwin_role'] !== 'admin') {
     exit();
 }
 
-include '../Koneksi.php';
+include __DIR__ . '/../Koneksi.php';
 
 $pesan = '';  
 $tipe  = '';
