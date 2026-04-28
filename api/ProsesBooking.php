@@ -1,15 +1,15 @@
 <?php
-session_start();
+
 include 'Koneksi.php';
 
 // Harus sudah login
-if (!isset($_SESSION['username'])) {
+if (!isset($_COOKIE['username'])) {
     echo "<script>alert('Kamu harus login dulu!'); window.location.href='../index.php';</script>";
     exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking'])) {
-    $username     = $_SESSION['username'];
+    $username     = $_COOKIE['username'];
     $destinasi    = trim($_POST['destinasi']);
     $nama_pemesan = trim($_POST['nama_pemesan']);
     $tanggal      = $_POST['tanggal'];
