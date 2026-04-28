@@ -3,13 +3,13 @@
 include 'Koneksi.php';
 
 // Harus sudah login
-if (!isset($_COOKIE['username'])) {
+if (!isset($_COOKIE['otwin_username']) || $_COOKIE['otwin_username'] === '') {
     echo "<script>alert('Kamu harus login dulu!'); window.location.href='../index.php';</script>";
     exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking'])) {
-    $username     = $_COOKIE['username'];
+    $username     = $_COOKIE['otwin_username'];
     $destinasi    = trim($_POST['destinasi']);
     $nama_pemesan = trim($_POST['nama_pemesan']);
     $tanggal      = $_POST['tanggal'];
